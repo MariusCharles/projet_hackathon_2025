@@ -10,7 +10,7 @@ channel
 process cutadapt{
     tag {sample_id}
 
-    container 'quay.io/biocontainers/cutadapt:1.11-??'
+    container 'docker://moncompte/cutadapt:1.11'
 
     input:
     tuple val(sample_id),path(reads)
