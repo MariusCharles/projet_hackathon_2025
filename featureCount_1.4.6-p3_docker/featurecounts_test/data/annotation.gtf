@@ -1,3 +1,0 @@
-##gff-version 3
-chr1	.	gene	1	1000	.	+	.	ID=geneA
-chr1	.	gene	2000	3000	.	-	.	ID=geneB

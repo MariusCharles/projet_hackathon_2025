@@ -1,4 +1,0 @@
-# Program:featureCounts v1.4.6-p3; Command:"featureCounts" "-T" "1" "-t" "gene" "-g" "ID" "-s" "1" "-a" "/data/annotation.gtf" "-o" "/data/output_counts.txt" "/data/toy.bam" 
-Geneid	Chr	Start	End	Strand	Length	/data/toy.bam
-geneA	chr1	1	1000	+	1000	1
-geneB	chr1	2000	3000	-	1001	1
