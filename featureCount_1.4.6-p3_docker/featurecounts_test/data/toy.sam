@@ -1,0 +1,4 @@
+@HD	VN:1.0	SO:unsorted
+@SQ	SN:chr1	LN:4000
+r1	0	chr1	100	255	50M	*	0	0	*	*
+r2	16	chr1	2500	255	50M	*	0	0	*	*
