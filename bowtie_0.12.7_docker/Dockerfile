@@ -15,19 +15,22 @@ RUN apt-get update && \
     zlib1g-dev gcc-4.4 g++-4.4\
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Télécharge et décompresse la version spécifique de Bowtie
+# 3. Définit Bash comme shell par défaut pour toutes les commandes RUN suivantes
+SHELL ["/bin/bash", "-c"]
+
+# 4. Télécharge et décompresse la version spécifique de Bowtie
 WORKDIR /opt/
 RUN wget http://sourceforge.net/projects/bowtie-bio/files/bowtie/0.12.7/bowtie-0.12.7-src.zip/download -O bowtie-0.12.7-src.zip
 RUN unzip bowtie-0.12.7-src.zip
 RUN rm bowtie-0.12.7-src.zip
 
-# 4. Compile Bowtie à partir des sources
+# 5. Compile Bowtie à partir des sources
 WORKDIR /opt/bowtie-0.12.7
 # gérer un bug connu de bowtie avec les versions récentes de GCC.
 RUN make CC=gcc-4.4 CXX=g++-4.4   
 
-# 5. Définit le chemin d'accès à l'exécutable
+# 6. Définit le chemin d'accès à l'exécutable
 ENV PATH="/opt/bowtie-0.12.7:$PATH"
 
-# 6. Commande par défaut (optionnel)
-CMD ["bowtie", "--version"]
+# 7. Commande par défaut (optionnel)
+CMD ["bash", "-c", "bowtie", "--version"]
