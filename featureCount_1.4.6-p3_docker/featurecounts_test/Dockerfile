@@ -3,7 +3,6 @@
 # ===========================================================
 
 FROM ubuntu:14.04
-SHELL ["/bin/bash", "-c"]
 
 # Informations de l'image
 LABEL creator="mathis.rescanieres"
