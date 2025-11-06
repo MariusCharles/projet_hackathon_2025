@@ -32,6 +32,47 @@ process CUTADAPT {
     publishDir "results", mode: 'copy'
 }
 
+
+process BOWTIE {
+    input:
+    file fastq_trimmed_file  //fichier FASTQ trimé
+    file ref_fasta    //fichier FASTA de référence
+    val index_prefix   //prefixe de l'index Bowtie
+
+    output:
+    file "${fastq_trimmed_file.baseName}.bam"
+
+
+    script:
+    def sam_file = "${fastq_trimmed_file.baseName}.sam"
+    def bam_unsorted = "${fastq_trimmed_file.baseName}_unsorted.bam"
+    def bam_sorted = "${fastq_trimmed_file.baseName}.bam"
+
+    """
+    # 1. Indexation du génome (à exécuter une seule fois si l'index n'existe pas)
+    # Si l'index n'existe pas :
+    # bowtie-build ${ref_fasta} ${index_prefix}
+    
+    # 2. Alignement avec Bowtie (version 0.12.7)
+    # -S = sortie SAM
+    bowtie -S -p 4 ${index_prefix} ${fastq_trimmed_file} ${sam_file}
+
+    # 3. Conversion SAM -> BAM non trié (nécessite samtools) car 
+    featureCounts prend un BAM en entrée.
+    samtools view -bS ${sam_file} > ${bam_unsorted}
+
+    # 4. Tri du fichier BAM (nécessaire pour featureCounts)
+    samtools sort ${bam_unsorted} -o ${bam_sorted}
+    
+    # 5. Nettoyage
+    rm ${sam_file} ${bam_unsorted}
+    """
+    
+    // Ajoutez publishDir si vous voulez les BAM dans le répertoire de résultats
+    publishDir "results", mode: 'copy'
+
+}
+
 process FEATURECOUNTS {
 
     input:
