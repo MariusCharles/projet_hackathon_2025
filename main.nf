@@ -104,7 +104,7 @@ process FEATURECOUNTS {
 
 workflow {
 sra_url = Channel
-    .fromPath('/data/data_url.txt')
+    .fromPath('./data/data_url.txt')
     .flatMap { file -> file.readLines() }  
     .map { it.trim() }                    
 fastq_files = DOWNLOAD(sra_url)
