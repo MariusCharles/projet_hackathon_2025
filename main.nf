@@ -37,6 +37,9 @@ process CUTADAPT {
 
 
 process BOWTIE {
+
+    tag "${fastq_trimmed_file.baseName}"
+
     input:
     file fastq_trimmed_file  //fichier FASTQ trimé
     file ref_fasta    //fichier FASTA de référence
@@ -45,35 +48,40 @@ process BOWTIE {
     output:
     file "${fastq_trimmed_file.baseName}.bam"
 
-
     script:
     def sam_file = "${fastq_trimmed_file.baseName}.sam"
     def bam_unsorted = "${fastq_trimmed_file.baseName}_unsorted.bam"
     def bam_sorted = "${fastq_trimmed_file.baseName}.bam"
 
     """
-    # 1. Indexation du génome (à exécuter une seule fois si l'index n'existe pas)
-    # Si l'index n'existe pas :
-    # bowtie-build ${ref_fasta} ${index_prefix}
-    
-    # 2. Alignement avec Bowtie (version 0.12.7)
-    # -S = sortie SAM
-    bowtie -S -p 4 ${index_prefix} ${fastq_trimmed_file} ${sam_file}
+    # 1️⃣ Création de l'index Bowtie si nécessaire
+    if [ ! -f "${index_prefix}.1.ebwt" ]; then
+        bowtie-build ${ref_fasta} ${index_prefix}
+    fi
 
-    # 3. Conversion SAM -> BAM non trié (nécessite samtools) car 
-    featureCounts prend un BAM en entrée.
-    samtools view -bS ${sam_file} > ${bam_unsorted}
+    # 2️⃣ Alignement FASTQ → SAM
+    bowtie -S -p 4 ${index_prefix} ${fastq_trimmed_file} > ${sam_file}
 
-    # 4. Tri du fichier BAM (nécessaire pour featureCounts)
+    # 3️⃣ Conversion SAM → BAM non trié
+    samtools view -bS ${sam_file} -o ${bam_unsorted}
+
+    # 4️⃣ Tri du BAM
     samtools sort ${bam_unsorted} -o ${bam_sorted}
-    
-    # 5. Nettoyage
+
+    # 5️⃣ Indexation du BAM trié
+    samtools index ${bam_sorted}
+
+    # 6️⃣ Vérification du contenu du BAM (affiche les premières lignes)
+    samtools view ${bam_sorted} | head
+
+    # 7️⃣ Affichage des statistiques de base
+    samtools flagstat ${bam_sorted}
+
+    # 8️⃣ Nettoyage des fichiers intermédiaires
     rm ${sam_file} ${bam_unsorted}
     """
-    
-    // Ajoutez publishDir si vous voulez les BAM dans le répertoire de résultats
-    publishDir "results", mode: 'copy'
 
+    publishDir "results", mode: 'copy'
 }
 
 // Channel pour le fichier GFF
