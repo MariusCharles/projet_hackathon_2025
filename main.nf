@@ -73,21 +73,32 @@ process BOWTIE {
 
 }
 
+// Channel pour le fichier GFF
+gff_file = Channel.fromPath('data/GCF_000013425.1_ASM1342v1_genomic.gff')
+
 process FEATURECOUNTS {
 
     input:
-    file bam_file
+    file bam_files from BOWTIE.out.collect()   
+    file gff from gff_file                      
 
     output:
-    file "${bam_file.baseName}_counts.txt"
+    file "counts_matrix.txt"
+
+    container 'mathisrescanieres/featurecount:1.4.6'
 
     script:
     """
-    featureCounts -a annotation.gtf -o ${bam_file.baseName}_counts.txt ${bam_files.join(' ')}
+    # Comptage des reads avec featureCounts
+    featureCounts \
+        -a ${gff} \
+        -g ID \
+        -o counts_matrix.txt ${bam_files.join(' ')}
     """
     
     publishDir "results", mode: 'copy'
 }
+
 
 
 workflow {
