@@ -1,15 +1,17 @@
 #!/usr/bin/env nextflow
 
-process FASTQ_DOWN {
+process DOWNLOAD {
     input:
-    val sra_id
+    val url
 
     output:
-    file "${sra_id}_*.fastq"  
+    file "*.fastq.gz"  
+
+    publishDir "results/fichier_fastq", mode: 'copy'
 
     script:
     """
-    fasterq-dump ${sra_id} -O .
+    wget -c ${url} -P .
     """
 }
 
@@ -20,16 +22,17 @@ process CUTADAPT {
     file fastq_file   
 
     output:
-    file "${fastq_file.baseName}_trimmed.fastq"
+    file "*.fastq"
+
+    publishDir "results/fastq_files_trimmed", mode: 'copy'
 
     script:
     """
     cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
              -m 25 -q 20 \
-             -o ${fastq_file.baseName}_trimmed.fastq ${fastq_file}
+             -o ${fastq_file.simpleName}_trimmed.fastq ${fastq_file}
     """
-
-    publishDir "results", mode: 'copy'
+    
 }
 
 
@@ -102,11 +105,11 @@ process FEATURECOUNTS {
 
 
 workflow {
-sra_ids = Channel
+sra_url = Channel
     .fromPath('data_SRA.txt')
     .flatMap { file -> file.readLines() }  
     .map { it.trim() }                    
-fastq_files = FASTQ_DOWN(sra_ids)
+fastq_files = FASTQ_DOWN(sra_url)
 fastq_trimmed = CUTADAPT(fastq_files)
 // bam_files = ALIGNMENT(fastq_trimmed)   // Partie de Eliott
 counts = FEATURECOUNTS(bam_files)
