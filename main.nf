@@ -88,7 +88,7 @@ process FEATURECOUNTS {
     output:
     file "counts_matrix.txt"
 
-    container 'mathisrescanieres/featurecount:1.4.6'
+    publishDir "results", mode: 'copy'
 
     script:
     """
@@ -98,18 +98,16 @@ process FEATURECOUNTS {
         -g ID \
         -o counts_matrix.txt ${bam_files.join(' ')}
     """
-    
-    publishDir "results", mode: 'copy'
 }
 
 
 
 workflow {
 sra_url = Channel
-    .fromPath('data_SRA.txt')
+    .fromPath('/data/data_url.txt')
     .flatMap { file -> file.readLines() }  
     .map { it.trim() }                    
-fastq_files = FASTQ_DOWN(sra_url)
+fastq_files = DOWNLOAD(sra_url)
 fastq_trimmed = CUTADAPT(fastq_files)
 // bam_files = ALIGNMENT(fastq_trimmed)   // Partie de Eliott
 counts = FEATURECOUNTS(bam_files)
