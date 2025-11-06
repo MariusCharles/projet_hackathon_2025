@@ -1,0 +1,25 @@
+FROM ubuntu:22.04
+
+# Installer dépendances de base
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Télécharger et installer SRA Toolkit
+RUN wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz \
+    && tar -xvzf sratoolkit.current-ubuntu64.tar.gz \
+    && rm sratoolkit.current-ubuntu64.tar.gz \
+    && mv sratoolkit.*-ubuntu64 /opt/sratoolkit \
+    && ln -s /opt/sratoolkit/bin/* /usr/local/bin/
+
+
+# Configuration SRA Toolkit minimale
+RUN mkdir -p /root/.ncbi \
+    && echo '/LIBS = []' > /root/.ncbi/user-settings.mkfg \
+    && mkdir -p /root/ncbi/public/sra
+
+# Mettre bash comme shell par défaut
+CMD ["/bin/bash"]

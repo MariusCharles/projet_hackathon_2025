@@ -1,32 +1,41 @@
-#! /usr/bin/env nextflow
+#!/usr/bin/env nextflow
 
-params.input = "data/*_R{1,2}.fastq"
-params.outdir = "results"
-
-channel
-    .fromFilePairs(params.input,flat=true)
-    .set{paired_reads}
-
-process cutadapt{
-    tag {sample_id}
-
-    container 'docker://moncompte/cutadapt:1.11'
-
+process FASTQ_DOWN {
     input:
-    tuple val(sample_id),path(reads)
+    val sra_id
 
     output:
-    tuple val(sample_id),path(["nettoye_R1.fastq", "nettoye_R2.fastq"])
+    file "${sra_id}_*.fastq"  
 
     script:
     """
-    cutadapt \
-    -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
-    -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
-    -o nettoye_R1.fastq -p nettoye_R2.fastq \
-    -m 25 -q ?? \
-    ${reads[0]} ${reads[1]}
+    fasterq-dump ${sra_id} -O .
     """
+}
 
-    publishDir "results/nettoye_etape_1", mode: 'copy'
+
+process CUTADAPT {
+
+    input:
+    file fastq_file   
+
+    output:
+    file "${fastq_file.baseName}_trimmed.fastq"
+
+    script:
+    """
+    cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
+             -m 25 -q 20 \
+             -o ${fastq_file.baseName}_trimmed.fastq ${fastq_file}
+    """
+    publishDir "results", mode: 'copy'
+}
+
+workflow {
+sra_ids = Channel
+    .fromPath('data_SRA.txt')
+    .flatMap { file -> file.readLines() }  
+    .map { it.trim() }                    
+fastq_files = FASTQ_DOWN(sra_ids)
+fastq_trimmed = CUTADAPT(fastq_files)
 }
