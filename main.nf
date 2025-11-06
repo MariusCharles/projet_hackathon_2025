@@ -28,7 +28,7 @@ process CUTADAPT {
              -m 25 -q 20 \
              -o ${fastq_file.baseName}_trimmed.fastq ${fastq_file}
     """
-    
+
     publishDir "results", mode: 'copy'
 }
 
@@ -42,7 +42,7 @@ process FEATURECOUNTS {
 
     script:
     """
-    featureCounts -a annotation.gtf -o ${bam_file.baseName}_counts.txt ${bam_file}
+    featureCounts -a annotation.gtf -o ${bam_file.baseName}_counts.txt ${bam_files.join(' ')}
     """
     
     publishDir "results", mode: 'copy'
