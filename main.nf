@@ -44,6 +44,7 @@ process BOWTIE {
 
     output:
     path "*.sorted.bam"
+    path "*.sorted.bam.bai"
 
     publishDir "results/bam_files", mode: 'copy'
 
@@ -70,14 +71,14 @@ process FEATURECOUNTS {
     output:
     file "*.txt"
 
-    publishDir "results/coun_matrix", mode: 'copy'
+    publishDir "results/count_matrix", mode: 'copy'
      
 
     script:
     """
-    wget -O genome.gff.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/013/425/GCF_000013425.1_ASM1342v1/GCF_000013425.1_ASM1342v1_genomic.gff.gz
-    gunzip genome.gff.gz
-    featureCounts -a genome.gff -o ${bam_file.simpleName}.txt ${bam_file}
+    wget -O genome.gtf.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/013/425/GCF_000013425.1_ASM1342v1/GCF_000013425.1_ASM1342v1_genomic.gtf.gz
+    gunzip genome.gtf.gz
+    featureCounts -a genome.gtf -o ${bam_file.simpleName}.txt ${bam_file}
     """
 
 }
