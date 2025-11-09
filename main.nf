@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-process DOWNLOAD {
+process DOWNLOAD_FASTQ {
     input:
     val url
 
@@ -35,12 +35,36 @@ process CUTADAPT {
     
 }
 
+process DOWNLOAD_GENOME {
+    output:
+    file "genome.fna"
+
+    script:
+    """
+    set -e
+    wget -O genome.fna.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/013/425/GCF_000013425.1_ASM1342v1/GCF_000013425.1_ASM1342v1_genomic.fna.gz
+    gunzip -c genome.fna.gz > genome.fna
+    """
+}
+
+process BUILD_INDEX {
+    input:
+    file genome_fna
+
+    output:
+    path "genome_index.*"
+
+    script:
+    """
+    bowtie-build ${genome_fna} genome_index
+    """
+}
 
 
 process BOWTIE {
 
     input:
-    file fastq_file
+    tuple file(fastq_file), file(genome_index_files)
 
     output:
     path "*.sorted.bam"
@@ -51,9 +75,6 @@ process BOWTIE {
     script:
     """
     set -e
-    wget -O genome.fna.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/013/425/GCF_000013425.1_ASM1342v1/GCF_000013425.1_ASM1342v1_genomic.fna.gz
-    gunzip -c genome.fna.gz > genome.fna
-    bowtie-build genome.fna genome_index
     bowtie -S genome_index ${fastq_file} > ${fastq_file.simpleName}.sam
     samtools view -bS ${fastq_file.simpleName}.sam > ${fastq_file.simpleName}.bam
     samtools sort ${fastq_file.simpleName}.bam -o ${fastq_file.simpleName}.sorted.bam
@@ -63,35 +84,64 @@ process BOWTIE {
 }
 
 
-process FEATURECOUNTS {
-
-    input:
-    file bam_file                  
+process DOWNLOAD_GTF {
 
     output:
-    file "*.txt"
-
-    publishDir "results/count_matrix", mode: 'copy'
-     
+    path "genome.gtf"
 
     script:
     """
+    set -e
     wget -O genome.gtf.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/013/425/GCF_000013425.1_ASM1342v1/GCF_000013425.1_ASM1342v1_genomic.gtf.gz
     gunzip genome.gtf.gz
-    featureCounts -a genome.gtf -o ${bam_file.simpleName}.txt ${bam_file}
     """
+}
 
+
+process FEATURECOUNTS {
+
+    input:
+    tuple val(bam_list), path(gtf_file)                
+
+    output:
+    file "counts_matrix.txt"
+
+    publishDir "results/count_matrix", mode: 'copy'
+     
+    script:
+    """
+    set -e
+    BAMS=$(echo ${bam_list.join(' ')})
+    featureCounts -a ${gtf_file} -t gene -g ID -s 1 -o counts_matrix.txt $BAMS
+    """
 }
 
 
 workflow {
+// Get les urls dans data_url.txt
 sra_url = Channel
     .fromPath('./data/data_url.txt')
     .flatMap { file -> file.readLines() }  
-    .map { it.trim() }                    
-fastq_files = DOWNLOAD(sra_url)
+    .map { it.trim() }                
+// On télécharge les fastq (6 channels)
+fastq_files = DOWNLOAD_FASTQ(sra_url)
+// On trim les fastq (6 channels)
 fastq_trimmed = CUTADAPT(fastq_files)
-bam_files = BOWTIE(fastq_trimmed)
-count_txt = FEATURECOUNTS(bam_files)
+// On télécharge le génome (fasta) 1 seule fois
+genome_fna = DOWNLOAD_GENOME()
+// On build l'index du génome 1 seule fois
+genome_index = BUILD_INDEX(genome_fna)
+// On associe les fastq aux genome_index 
+reads_with_index = fastq_trimmed.combine(genome_index)
+// On aligne les fastq => bam 
+bam_files = BOWTIE(reads_with_index)
+// On fait collect => on attend l'output de toutes les channels et all_bams contient tous les bams 
+all_bams = bam_files.collect()
+// On download le GTF
+genome_gtf = DOWNLOAD_GTF()
+// On associe bams + gtf
+bam_with_gtf = all_bams.combine(genome_gtf)
+// On génère la matrice de comptes 
+count_txt = FEATURECOUNTS(bam_with_gtf)
 }
 
