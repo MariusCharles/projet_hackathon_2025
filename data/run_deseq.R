@@ -2,10 +2,10 @@
 library(DESeq2)
 
 args <- commandArgs(trailingOnly = TRUE)
-counts_file  <- args[1]   # counts_matrix.txt (de featurecounts)
+counts_file  <- args[1]   # counts_matrix.txt
 coldata_file <- args[2]   # config.csv
 
-## lire mat 
+# Lire counts matrix 
 cts <- read.table(
   counts_file,
   header       = TRUE,
@@ -14,45 +14,59 @@ cts <- read.table(
   check.names  = FALSE
 )
 
-## On enlève les colonnes de coordonnées (Chr, Start, End, Strand, Length)
-cts <- cts[, !(colnames(cts) %in% c("Chr", "Start", "End", "Strand", "Length"))]
+# Retirer les colonnes d'annot
+annot_cols <- c("Chr", "Start", "End", "Strand", "Length")
+cts <- cts[, !(colnames(cts) %in% annot_cols), drop = FALSE]
 
-## Clean pour enlever suffixe .sorted.bam 
+# Clean noms de colonne
+colnames(cts) <- basename(colnames(cts))
+
 colnames(cts) <- sub("\\.sorted\\.bam$", "", colnames(cts))
 colnames(cts) <- sub("\\.bam$", "", colnames(cts))
 
-## Lire le config file
+colnames(cts) <- sub("_trimmed$", "", colnames(cts))
+
+# Lire le fichier config
 coldata <- read.csv(
   coldata_file,
   row.names   = 1,
   check.names = FALSE
 )
 
-# Garder que la colonne sample et la col condition 
-coldata <- coldata[, "condition", drop = FALSE]
+# sample en rownames
+rownames(coldata) <- coldata$sample
 
-# S'assurer que les colonnes de counts correspondent aux samples de coldata
+# on garde que la colonne condition
+coldata <- coldata["condition"]
+
+
+# petit checkup (debuggage)
 common_samples <- intersect(colnames(cts), rownames(coldata))
 
-# même ordre 
+if (length(common_samples) == 0) {
+  stop(
+    "Aucun échantillon en commun entre counts_matrix et config.csv.\n",
+    "Noms dans counts: ", paste(colnames(cts), collapse = ", "), "\n",
+    "Noms dans coldata: ", paste(rownames(coldata), collapse = ", "), "\n"
+  )
+}
+
 cts     <- cts[, common_samples, drop = FALSE]
 coldata <- coldata[common_samples, , drop = FALSE]
 
-## construire datasetdeseq
-dds <- DESeqDataSetFromMatrix(countData = cts,
-                              colData   = coldata,
-                              design    = ~ condition)
+# build objet deseq2
+dds <- DESeqDataSetFromMatrix(
+  countData = cts,
+  colData   = coldata,
+  design    = ~ condition
+)
 
 dds <- DESeq(dds)
-res <- results(dds) # run deseq
+res <- results(dds)
 
-## Save 
+# Save file + plot figure supp
 write.csv(as.data.frame(res), file = "deseq2_results.csv", row.names = TRUE)
 
-# Premier MAplot test 
 pdf("MA_plot.pdf")
 plotMA(res, ylim = c(-4,4), alpha = 0.05)
 dev.off()
-
-
-

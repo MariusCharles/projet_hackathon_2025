@@ -64,11 +64,11 @@ process BUILD_INDEX {
 process BOWTIE {
 
     input:
-    tuple file(fastq_file), file(genome_index_files)
+    path fastq_file
+    path genome_index
 
     output:
     path "*.sorted.bam"
-    path "*.sorted.bam.bai"
 
     publishDir "results/bam_files", mode: 'copy'
 
@@ -101,7 +101,8 @@ process DOWNLOAD_GTF {
 process FEATURECOUNTS {
 
     input:
-    tuple val(bam_list), path(gtf_file)
+    val bam_list
+    path gtf_file
 
     output:
     file "counts_matrix.txt"
@@ -111,7 +112,13 @@ process FEATURECOUNTS {
     script:
     """
     set -e
-    featureCounts -a ${gtf_file} -t gene -g ID -s 1 -o counts_matrix.txt ${bam_list.join(' ')}
+    featureCounts \
+        -F GTF \
+        -a ${gtf_file} \
+        -t gene \
+        -g gene_id \
+        -s 1 \
+        -o counts_matrix.txt ${bam_list.join(' ')}
     """
 }
 
@@ -129,13 +136,12 @@ process DESEQ {
 
     script:
     """
-      eval "\$(micromamba shell hook -s bash)"
-      micromamba activate base
+    eval "\$(micromamba shell hook -s bash)"
+    micromamba activate base
 
-      Rscript ${deseq_script} ${counts_matrix} ${coldata_csv}
+    Rscript ${deseq_script} ${counts_matrix} ${coldata_csv}
     """
 }
-
 
 
 
@@ -153,23 +159,15 @@ fastq_trimmed = CUTADAPT(fastq_files)
 genome_fna = DOWNLOAD_GENOME()
 // On build l'index du génome 1 seule fois
 genome_index = BUILD_INDEX(genome_fna)
-// On associe les fastq aux genome_index 
-reads_with_index = fastq_trimmed.combine(genome_index)
 // On aligne les fastq => bam 
-bam_files = BOWTIE(reads_with_index)
-// On fait collect => on attend l'output de toutes les channels et all_bams contient tous les bams 
-all_bams = bam_files.collect()
+sorted_bams = BOWTIE(fastq_trimmed,genome_index)
+// On fait collect => on attend que tous les BAM soient produits
+all_bams = sorted_bams.collect()
 // On download le GTF
 genome_gtf = DOWNLOAD_GTF()
-// On associe bams + gtf
-bam_with_gtf = all_bams.combine(genome_gtf)
 // On génère la matrice de comptes 
-count_txt = FEATURECOUNTS(bam_with_gtf)
+count_txt = FEATURECOUNTS(all_bams,genome_gtf)
 // On lit la matrice de comptes + coldata et on run Deseq + plot 
-deseq_results = DESEQ(
-    count_txt,                 
-    file('./data/config.csv'), 
-    file('run_deseq.R')        // pour l'instant script dans le répertoire courant
-)
+deseq_results = DESEQ(count_txt,file('./data/config.csv'), file('run_deseq.R'))
 }
 
