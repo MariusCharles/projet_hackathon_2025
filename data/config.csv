@@ -1,0 +1,7 @@
+sample,condition,replicate,url
+SRR10379721,persister,1,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/021/SRR10379721/SRR10379721.fastq.gz
+SRR10379722,persister,2,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/022/SRR10379722/SRR10379722.fastq.gz
+SRR10379723,persister,3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/023/SRR10379723/SRR10379723.fastq.gz
+SRR10379724,control,1,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/024/SRR10379724/SRR10379724.fastq.gz
+SRR10379725,control,2,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/025/SRR10379725/SRR10379725.fastq.gz
+SRR10379726,control,3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/026/SRR10379726/SRR10379726.fastq.gz
