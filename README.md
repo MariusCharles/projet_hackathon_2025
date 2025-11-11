@@ -6,6 +6,17 @@ L’objectif est de garantir la reproductibilité complète des résultats : mê
 
 ---
 
+## En cours
+
+- [ ] Faire le diapo pour séance 14/11
+- [ ] Automatiser nb de cpu utilisé par chaque process (task.cpus...)
+- [ ] Construire base de données KEGG translation pour le plot annoté 
+- [ ] Gérer conversions noms de gènes
+- [ ] Nettoyer le dossier `to_delete/` après validation  
+- [ ] Commencer à écrire le rapport
+
+---
+
 ## Structure du dépôt
 
 | Dossier / fichier | Description |
@@ -31,6 +42,9 @@ Reproduire les figures principales de l’article à partir des données publiqu
 - **16 CPU**  
 - **64 Go de RAM**  
 - **400 Go de stockage**
+
+### Fichiers nécessaires
+- **`main.nf`**, **`nextflow.config`**, **`data/`**
 
 ### Lancer le pipeline
 
