@@ -101,18 +101,17 @@ process DOWNLOAD_GTF {
 process FEATURECOUNTS {
 
     input:
-    tuple val(bam_list), path(gtf_file)                
+    tuple val(bam_list), path(gtf_file)
 
     output:
     file "counts_matrix.txt"
 
     publishDir "results/count_matrix", mode: 'copy'
-     
+
     script:
     """
     set -e
-    BAMS=$(echo ${bam_list.join(' ')})
-    featureCounts -a ${gtf_file} -t gene -g ID -s 1 -o counts_matrix.txt $BAMS
+    featureCounts -a ${gtf_file} -t gene -g ID -s 1 -o counts_matrix.txt ${bam_list.join(' ')}
     """
 }
 
