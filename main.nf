@@ -116,13 +116,36 @@ process FEATURECOUNTS {
     """
 }
 
+process DESEQ {
+    publishDir 'results/deseq2', mode: 'copy'
+
+    input:
+    file counts_matrix
+    file coldata_csv
+    file deseq_script
+
+    output:
+    file 'deseq2_results.csv'
+    file 'MA_plot.pdf'
+
+    script:
+    """
+      eval "\$(micromamba shell hook -s bash)"
+      micromamba activate base
+
+      Rscript ${deseq_script} ${counts_matrix} ${coldata_csv}
+    """
+}
+
+
+
 
 workflow {
-// Get les urls dans data_url.txt
+// Get les urls dans config.csv
 sra_url = Channel
-    .fromPath('./data/data_url.txt')
-    .flatMap { file -> file.readLines() }  
-    .map { it.trim() }                
+    .fromPath('./data/config.csv')
+    .splitCsv(header: true)
+    .map { row -> row.url.trim() }                
 // On télécharge les fastq (6 channels)
 fastq_files = DOWNLOAD_FASTQ(sra_url)
 // On trim les fastq (6 channels)
@@ -143,5 +166,11 @@ genome_gtf = DOWNLOAD_GTF()
 bam_with_gtf = all_bams.combine(genome_gtf)
 // On génère la matrice de comptes 
 count_txt = FEATURECOUNTS(bam_with_gtf)
+// On lit la matrice de comptes + coldata et on run Deseq + plot 
+deseq_results = DESEQ(
+    count_txt,                 
+    file('./data/config.csv'), 
+    file('run_deseq.R')        // pour l'instant script dans le répertoire courant
+)
 }
 
