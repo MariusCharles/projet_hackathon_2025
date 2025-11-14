@@ -150,23 +150,32 @@ workflow {
 sra_url = Channel
     .fromPath('./data/config.csv')
     .splitCsv(header: true)
-    .map { row -> row.url.trim() }                
+    .map { row -> row.url.trim() }      
+
 // On télécharge les fastq (6 channels)
 fastq_files = DOWNLOAD_FASTQ(sra_url)
+
 // On trim les fastq (6 channels)
 fastq_trimmed = CUTADAPT(fastq_files)
+
 // On télécharge le génome (fasta) 1 seule fois
 genome_fna = DOWNLOAD_GENOME()
+
 // On build l'index du génome 1 seule fois
 genome_index = BUILD_INDEX(genome_fna)
+
 // On aligne les fastq => bam 
 sorted_bams = BOWTIE(fastq_trimmed,genome_index)
+
 // On fait collect => on attend que tous les BAM soient produits
 all_bams = sorted_bams.collect()
+
 // On download le GTF
 genome_gtf = DOWNLOAD_GTF()
+
 // On génère la matrice de comptes 
 count_txt = FEATURECOUNTS(all_bams,genome_gtf)
+
 // On lit la matrice de comptes + coldata et on run Deseq + plot 
 deseq_results = DESEQ(count_txt,file('./data/config.csv'), file('run_deseq.R'))
 }
