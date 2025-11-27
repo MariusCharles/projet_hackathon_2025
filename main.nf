@@ -15,11 +15,11 @@ process DOWNLOAD_FASTQ {
     """
 }
 
-
 process CUTADAPT {
 
     input:
-    file fastq_file   
+    file fastq_file 
+    val q  
 
     output:
     file "*.fastq"
@@ -29,7 +29,7 @@ process CUTADAPT {
     script:
     """
     cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
-             -m 25 -q 20 \
+             -m 25 -q ${q} \
              -o ${fastq_file.simpleName}_trimmed.fastq ${fastq_file}
     """
     
@@ -60,29 +60,29 @@ process BUILD_INDEX {
     """
 }
 
-
 process BOWTIE {
 
+    cpus 4
     input:
     path fastq_file
     path genome_index
 
     output:
-    path "*.sorted.bam"
+    path "*.sorted.bam", emit: sorted_bam
+    path "*.bai", emit: bai_index
+
 
     publishDir "results/bam_files", mode: 'copy'
 
     script:
     """
     set -e
-    bowtie -S genome_index ${fastq_file} > ${fastq_file.simpleName}.sam
-    samtools view -bS ${fastq_file.simpleName}.sam > ${fastq_file.simpleName}.bam
-    samtools sort ${fastq_file.simpleName}.bam -o ${fastq_file.simpleName}.sorted.bam
+    bowtie -S genome_index ${fastq_file} | \
+    samtools view -bS - | \
+    samtools sort -@ ${task.cpus} -o ${fastq_file.simpleName}.sorted.bam -
     samtools index ${fastq_file.simpleName}.sorted.bam
-    rm ${fastq_file.simpleName}.sam ${fastq_file.simpleName}.bam
     """
 }
-
 
 process DOWNLOAD_GTF {
 
@@ -97,11 +97,11 @@ process DOWNLOAD_GTF {
     """
 }
 
-
 process FEATURECOUNTS {
-
+    
+    cpus 4
     input:
-    val bam_list
+    path bam_files
     path gtf_file
 
     output:
@@ -111,16 +111,12 @@ process FEATURECOUNTS {
 
     script:
     """
-    set -e
-    featureCounts \
-        -F GTF \
-        -a ${gtf_file} \
-        -t gene \
-        -g gene_id \
-        -s 1 \
-        -o counts_matrix.txt ${bam_list.join(' ')}
+    featureCounts -T ${task.cpus} \
+        -F GTF -a ${gtf_file} -t gene -g gene_id -s 1 \
+        -o counts_matrix.txt ${bam_files.join(' ')}
     """
 }
+
 
 process DESEQ {
     publishDir 'results/deseq2', mode: 'copy'
@@ -128,7 +124,6 @@ process DESEQ {
     input:
     file counts_matrix
     file coldata_csv
-    file deseq_script
 
     output:
     file 'deseq2_results.csv'
@@ -139,7 +134,7 @@ process DESEQ {
     eval "\$(micromamba shell hook -s bash)"
     micromamba activate base
 
-    Rscript ${deseq_script} ${counts_matrix} ${coldata_csv}
+    bin/run_deseq.R ${counts_matrix} ${coldata_csv}
     """
 }
 
@@ -148,7 +143,7 @@ process DESEQ {
 workflow {
 // Get les urls dans config.csv
 sra_url = Channel
-    .fromPath('./data/config.csv')
+    .fromPath(params.config)
     .splitCsv(header: true)
     .map { row -> row.url.trim() }      
 
@@ -156,7 +151,7 @@ sra_url = Channel
 fastq_files = DOWNLOAD_FASTQ(sra_url)
 
 // On trim les fastq (6 channels)
-fastq_trimmed = CUTADAPT(fastq_files)
+fastq_trimmed = CUTADAPT(fastq_files, params.q)
 
 // On télécharge le génome (fasta) 1 seule fois
 genome_fna = DOWNLOAD_GENOME()
@@ -165,7 +160,7 @@ genome_fna = DOWNLOAD_GENOME()
 genome_index = BUILD_INDEX(genome_fna)
 
 // On aligne les fastq => bam 
-sorted_bams = BOWTIE(fastq_trimmed,genome_index)
+sorted_bams = BOWTIE(fastq_trimmed,genome_index).sorted_bam
 
 // On fait collect => on attend que tous les BAM soient produits
 all_bams = sorted_bams.collect()
@@ -177,6 +172,6 @@ genome_gtf = DOWNLOAD_GTF()
 count_txt = FEATURECOUNTS(all_bams,genome_gtf)
 
 // On lit la matrice de comptes + coldata et on run Deseq + plot 
-deseq_results = DESEQ(count_txt,file('./data/config.csv'), file('run_deseq.R'))
+deseq_results = DESEQ(count_txt, file(params.config))
 }
 
