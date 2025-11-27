@@ -17,7 +17,7 @@ process DOWNLOAD_FASTQ {
 
 process CUTADAPT {
 
-    cpus { Math.max(1, System.cpus / 4) }
+    cpus { Math.max(1, (params.core_nb / 4).toInteger()) }
 
     input:
     file fastq_file 
@@ -64,7 +64,7 @@ process BUILD_INDEX {
 
 process BOWTIE {
 
-    cpus { Math.max(1, System.cpus / 2) }
+    cpus { Math.max(1, (params.core_nb / 2).toInteger()) }
 
     input:
     path fastq_file
@@ -102,7 +102,7 @@ process DOWNLOAD_GTF {
 
 process FEATURECOUNTS {
     
-    cpus { Math.max(1, System.cpus / 2) }
+    cpus { Math.max(1, (params.core_nb / 2).toInteger()) }
 
     input:
     path bam_files
@@ -178,4 +178,3 @@ count_txt = FEATURECOUNTS(all_bams,genome_gtf)
 // On lit la matrice de comptes + coldata et on run Deseq + plot 
 deseq_results = DESEQ(count_txt, file(params.config))
 }
-
