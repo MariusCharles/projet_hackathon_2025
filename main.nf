@@ -17,6 +17,8 @@ process DOWNLOAD_FASTQ {
 
 process CUTADAPT {
 
+    cpus { Math.max(1, System.cpus / 4) }
+
     input:
     file fastq_file 
     val q  
@@ -62,7 +64,8 @@ process BUILD_INDEX {
 
 process BOWTIE {
 
-    cpus 4
+    cpus { Math.max(1, System.cpus / 2) }
+
     input:
     path fastq_file
     path genome_index
@@ -99,7 +102,8 @@ process DOWNLOAD_GTF {
 
 process FEATURECOUNTS {
     
-    cpus 4
+    cpus { Math.max(1, System.cpus / 2) }
+
     input:
     path bam_files
     path gtf_file
