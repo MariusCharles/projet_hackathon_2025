@@ -1,0 +1,236 @@
+library(ggplot2) 
+library(VennDiagram)
+library(ggrepel)
+
+# Importer les tables
+paper_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/deseq_table_paper.xls"
+deseq_results_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/deseq2_results.csv"
+counts_file  <- "/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/counts_matrix.txt"   # counts_matrix.txt
+mapping_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/clean_KEGG/mapping_aureowiki.tsv"
+
+# Lire la table du papier (attention appel robuste sinon ne marche pas)
+res_paper <- read.delim(
+  file = paper_path,
+  header = TRUE,
+  sep = "\t",
+  quote = "",
+  comment.char = "",
+  check.names = FALSE,
+  stringsAsFactors = FALSE,
+  fill = TRUE,
+  na.strings = c("", "NA", "N/A"),
+  strip.white = TRUE
+)
+
+
+# Lire deseq results
+res <- read.csv(deseq_results_path,row.names =1)
+
+# Lire counts mat
+cts <- read.table(
+  counts_file,
+  header       = TRUE,
+  comment.char = "#",
+  row.names    = 1,
+  check.names  = FALSE
+)
+
+# Lire table de mapping 
+mapping <- read.table(
+  mapping_path,
+  header = TRUE,
+  sep = "\t",
+  quote = "",
+  fill = TRUE,
+  stringsAsFactors = FALSE,
+  check.names = F
+)
+# On ajoute 'pth' à la main car il n'est pas présent dans la table d'origine
+mapping[mapping$product == "peptidyl-tRNA hydrolase", ]$symbol="pth"
+
+
+# === Pré-traitement ===
+# Retirer les colonnes d'annot
+annot_cols <- c("Chr", "Start", "End", "Strand", "Length")
+cts <- cts[, !(colnames(cts) %in% annot_cols), drop = FALSE]
+
+# Clean noms de colonne : à enlever quand on aura fix directement sur le main.nf
+old_names <- colnames(cts)
+new_names <- gsub("_trimmed.sorted.bam$", "", old_names)
+colnames(cts) <- new_names
+# =====================
+
+
+# On merge les dataframes:
+res_combined <- cbind(
+  res,
+  cts[rownames(res), ], 
+  mapping[match(rownames(res), mapping$locus_tag), -1]
+)
+
+# Je rajoute "symbol" à la table du papier
+res_paper <- merge(
+  res_paper,
+  mapping[, c("locus_tag", "symbol")],
+  by.x = "Name",
+  by.y = "locus_tag",
+  all.x = TRUE
+)
+
+
+# ==== Compare Results ====
+# Créer une colonne commune
+res_combined$Name <- rownames(res_combined)
+# Gènes communs 
+common_genes <- intersect(res_paper$Name, res_combined$Name)
+# Gènes présents dans le papier mais absents de nos résultats 
+missing_in_repro <- setdiff(res_paper$Name, res_combined$Name)
+# Gènes présents dans nos résultats mais absents du papier 
+extra_in_repro <- setdiff(res_combined$Name, res_paper$Name)
+
+# Tableau
+compare_summary <- data.frame(
+  Category = c("Total genes (paper)", 
+               "Total genes (reproduction)", 
+               "Common genes",
+               "Missing in reproduction",
+               "Extra in reproduction"),
+  Count = c(
+    length(res_paper$Name),
+    nrow(res_combined),
+    length(common_genes),
+    length(missing_in_repro),
+    length(extra_in_repro)
+  )
+)
+
+write.table(compare_summary,
+            file = "comparison_summary_genes.tsv",
+            sep = "\t",
+            row.names = FALSE,
+            quote = FALSE)
+# =========================
+
+
+# === Venn Diagram gènes DE entre le papier et la repro ===
+# Gènes DE
+de_paper <- unique(na.omit(df_compare$Name[df_compare$padj_paper < 0.05]))
+de_repro <- unique(na.omit(df_compare$Name[df_compare$padj_repro < 0.05]))
+
+pdf("venn_DEgenes_paper_repro.pdf")
+grid.newpage()
+pushViewport(viewport(width = unit(10, "cm"), height = unit(10, "cm")))
+draw.pairwise.venn(
+  area1 = length(de_paper),
+  area2 = length(de_repro),
+  cross.area = length(intersect(de_paper, de_repro)),
+  
+  category = c("DE genes in the paper", "DE genes in the repro"),
+  
+  lwd = 1,
+  col = c("#440154ff", "#21908dff"),
+  fill = c("#440154ff", "#21908dff"),
+  alpha = c(0.3, 0.3),
+  
+  cex = 0.8,
+  fontfamily = "sans",
+  
+  cat.pos = c(-30, 30),      # angle
+  cat.dist = c(0.05, 0.05),  # distance au cercle
+  cat.cex = 1,
+  cat.fontfamily = "sans",
+  cat.col = c("#440154ff", "#21908dff")
+)
+dev.off()
+# =========================================================
+
+
+# ==== VOLCANO PLOT DU PAPIER (bonus) ====
+# Préparer les colonnes utiles
+res_paper$minusLog10Padj <- -log10(res_paper$padj)
+
+res_paper$diffexp <- "Not significant"
+res_paper$diffexp[res_paper$log2FoldChange > 0 & res_paper$padj<0.05] <- "Up"
+res_paper$diffexp[res_paper$log2FoldChange < 0 & res_paper$padj<0.05] <- "Down"
+
+# Top 10 gènes les plus signifs
+top10 <- res_paper[order(res_paper$padj), ][1:10, ]
+
+pdf("volcano_allgenes.pdf")
+# Plot
+volcano <- ggplot(res_paper, aes(x = log2FoldChange, y = minusLog10Padj)) +
+  geom_point(aes(color = diffexp), alpha = 0.7, size = 1.5) +
+  
+  # Seuils
+  geom_vline(xintercept = c(-0.6, 0.6), linetype = "dashed", color = "grey50") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey50") +
+  
+  # Labels des top gènes
+  geom_text_repel(
+    data = top10,
+    aes(label = symbol),
+    size = 2.2,
+    segment.color = "black",
+    segment.size = 0.8,
+    min.segment.length = 0,
+    box.padding = 0.8,
+    point.padding = 0
+  ) +
+  
+  # Couleurs
+  scale_color_manual(
+    values = c("Down" = "blue", "Not significant" = "grey70", "Up" = "red")
+  ) +
+  
+  theme_classic() +
+  labs(
+    title = "Volcano plot : Paper results",   
+    x = expression(log[2]~"Fold Change"),
+    y = expression(-log[10]~"adjusted p-value"),
+    color = "Differential expression"
+  )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+print(volcano)
+dev.off()
+#======================================
+
+
+
+# === Comparaison des valeurs numériques : ===
+df_compare <- merge(
+  res_paper[, c("Name", "baseMean", "log2FoldChange", "padj")],
+  res_combined[, c("Name", "baseMean", "log2FoldChange", "padj")],
+  by = "Name",
+  suffixes = c("_paper", "_repro")
+)
+
+cor_baseMean <- cor(df_compare$baseMean_paper, df_compare$baseMean_repro, use = "complete.obs")
+cor_log2FC   <- cor(df_compare$log2FoldChange_paper, df_compare$log2FoldChange_repro, use = "complete.obs")
+# ===========================================
+
+
+
+# === Scatter plots ===
+pdf("scatterplot_log2FC_paper_repro.pdf")
+ggplot(df_compare, aes(x = log2FoldChange_paper, y = log2FoldChange_repro)) +
+  geom_point(alpha = 0.4) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  theme_classic() +
+  labs(title = paste("log2FC correlation (r =", round(cor_log2FC, 3), ")"))+ 
+  theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+
+pdf("scatterplot_basemean_paper_repro.pdf")
+ggplot(df_compare, aes(x = baseMean_paper, y = baseMean_repro)) +
+  geom_point(alpha = 0.4) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  theme_classic() +
+  labs(title = paste("BaseMean correlation (r =", round(cor_baseMean, 3), ")")) +
+  theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+# ====================
+
