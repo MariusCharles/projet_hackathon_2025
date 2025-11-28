@@ -222,6 +222,62 @@ dev.off()
 # =========================================================
 
 
+# === Quadrant Plot sur les DE genes ===
+df_de <- df_compare[
+  df_compare$padj_paper < 0.05 &
+    df_compare$padj_repro < 0.05,
+]
+
+# Définir les catégories quadrant (UP/DOWN)
+df_de$category <- NA
+
+df_de$category[
+  df_de$log2FoldChange_paper > 0 &
+    df_de$log2FoldChange_repro > 0
+] <- "UP-UP"
+
+df_de$category[
+  df_de$log2FoldChange_paper < 0 &
+    df_de$log2FoldChange_repro < 0
+] <- "DOWN-DOWN"
+
+df_de$category[
+  df_de$log2FoldChange_paper > 0 &
+    df_de$log2FoldChange_repro < 0
+] <- "UP-DOWN"
+
+df_de$category[
+  df_de$log2FoldChange_paper < 0 &
+    df_de$log2FoldChange_repro > 0
+] <- "DOWN-UP"
+
+
+# Plot
+pdf("scatter_quadrants_DE_genes.pdf")
+ggplot(df_de, aes(x = log2FoldChange_paper, y = log2FoldChange_repro)) +
+  geom_point(aes(color = category), alpha = 0.6, size = 1.8) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey60") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey60") +
+  theme_classic() +
+  scale_color_manual(values = c(
+    "UP-UP" = "#E41A1C",     # rouge
+    "DOWN-DOWN" = "#377EB8", # bleu
+    "UP-DOWN" = "#984EA3",   # violet
+    "DOWN-UP" = "#FF7F00"    # orange
+  )) +
+  labs(
+    title = "Quadrant scatter (DE-only)",
+    subtitle = paste0("n = ", nrow(df_de), " DE genes"),
+    x = "log2FC (paper)",
+    y = "log2FC (repro)",
+    color = "Category"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+# ==========================
+
+
+
 # ==== VOLCANO PLOT DU PAPIER (bonus) ====
 # Préparer les colonnes utiles
 res_paper$minusLog10Padj <- -log10(res_paper$padj)
