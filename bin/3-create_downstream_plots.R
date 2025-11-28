@@ -7,7 +7,6 @@ args <- commandArgs(trailingOnly = TRUE)
 deseq_results_path  <- args[1]
 genes_pathways_path <- args[2]
 mapping_path        <- args[3]
-pca_table_path      <- args[4]
 
 # Lire résultats deseq
 res <- read.csv(deseq_results_path,row.names =1)
@@ -33,14 +32,6 @@ mapping <- read.table(
 
 # On ajoute 'pth' à la main car il n'est pas présent dans la table d'origine
 mapping[mapping$product == "peptidyl-tRNA hydrolase", ]$symbol="pth"
-
-# Lire la table PCA
-pca_df <- read.table(
-  pca_table_path,
-  header = TRUE,
-  sep = "\t",
-  stringsAsFactors = FALSE
-)
 
 
 # === Préparation du dataframe pour le plot : ===
@@ -109,7 +100,7 @@ res_annot$diffexp[res_annot$log2FoldChange < 0 & res_annot$is_sig] <- "Down"
 # Top 10 gènes les plus signifs
 top10 <- res_annot[order(res_annot$padj), ][1:10, ]
 
-pdf("volcano_allgenes.pdf")
+pdf("volcano_repro.pdf")
 # Plot
 volcano <- ggplot(res_annot, aes(x = log2FoldChange, y = minusLog10Padj)) +
   geom_point(aes(color = diffexp), alpha = 0.7, size = 1.5) +
@@ -148,26 +139,7 @@ print(volcano)
 dev.off()
 #======================================
 
-
-# ===== PCA PLOT (bonus) =====
-pdf("PCA_plot_repro.pdf")
-ggplot(pca_df, aes(x = PC1, y = PC2, color = condition)) +
-  geom_point(size = 3) +
-  geom_text_repel(aes(label = sample), size = 3) +
-  theme_classic() +
-  labs(
-    title = "PCA - Repro results",
-    x = "PC1",
-    y = "PC2",
-    color = "Condition"
-  )
-dev.off()
-# ============================
-
-
 # ===== MA-PLOT TRANSLATION GENES =====
-
-# Colonne signif (Significant / Non-Significant)
 plot_df=res_annot[translation_genes, ]
 
 pdf("MA_plot_translationgenes.pdf")
@@ -219,7 +191,6 @@ p <- ggplot(
     point.padding = 0
   )+
 
-  
   # Ligne horizontale
   geom_hline(yintercept = 0, linetype = "dashed") +
   
@@ -232,7 +203,11 @@ p <- ggplot(
   ) +
   
   theme_classic() +
-  theme(panel.border = element_rect(color = "black", linewidth = 1))
+  theme(
+  panel.background = element_rect(fill = NA, color = NA),
+  panel.border = element_rect(fill = NA, color = "black", size = 1)
+) 
+
 
 # Gestion de la légende
 p <- p + theme(
@@ -244,21 +219,13 @@ p <- p + guides(
   shape = guide_legend(order = 2)
 )
 
-
 p <- p + theme(
   legend.position = c(0.32, 0.08),
   legend.background = element_blank(),
   legend.box.background = element_blank(),
   legend.key = element_blank()
 )
-
-
 print(p)
 dev.off()
 #======================================
-
-
-
-
-
 

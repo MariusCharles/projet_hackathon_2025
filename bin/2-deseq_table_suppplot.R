@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 library(DESeq2)
+library(ggplot2)
 
 # Récupérer les arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -73,22 +74,20 @@ plotMA(res, ylim = c(-4,4), alpha = 0.05)
 dev.off()
 
 
-# === Génération de la table PCA ===
-vsd <- vst(dds, blind = FALSE)
-pca <- prcomp(t(assay(vsd)), scale. = TRUE)
+# === Génération du plot PCA ===
+transformed_counts = vst(dds, blind = FALSE)
 
-pca_df <- data.frame(
-  sample    = rownames(pca$x),
-  PC1       = pca$x[,1],
-  PC2       = pca$x[,2],
-  condition = coldata[rownames(pca$x), "condition"]
-)
-
-# ========== Save ==========
-write.table(
-  pca_df,
-  file = "pca_vst_table.tsv",
-  sep = "\t",
-  row.names = FALSE,
-  quote = FALSE
-)
+pdf("PCA_repro.pdf")
+plotPCA(transformed_counts, intgroup="condition") +
+  labs(color = "Sample",
+       title = "PCA - Repro") +
+  geom_label(
+    aes(label = name),
+    size = 3,
+    label.padding = unit(0.15, "lines"),
+    alpha = 0.7,
+    nudge_y = 1.1
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_cartesian(clip = "off")             # labels en dehors visibles
+dev.off()

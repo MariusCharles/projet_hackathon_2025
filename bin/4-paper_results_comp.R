@@ -3,6 +3,7 @@ library(ggplot2)
 library(VennDiagram)
 library(ggrepel)
 library(grid)
+library(DESeq2)
 
 # ==== Arguments Nextflow ====
 args <- commandArgs(trailingOnly = TRUE)
@@ -129,6 +130,65 @@ cor_log2FC   <- cor(df_compare$log2FoldChange_paper, df_compare$log2FoldChange_r
 # ===========================================
 
 
+# === PCA : papier ===
+# Mapping
+sample_mapping <- c(
+  "SRR10379721" = "IP1",
+  "SRR10379722" = "IP2",
+  "SRR10379723" = "IP3",
+  "SRR10379724" = "ctrl4",
+  "SRR10379725" = "ctrl5",
+  "SRR10379726" = "ctrl6"
+)
+
+# Colonnes de comptage (ctrl1, IP2, ...)
+rownames<-res_paper$Name
+count_cols <- grep("^ctrl|^IP", colnames(res_paper), value = TRUE)
+paper_counts <- res_paper[, count_cols]
+rownames(paper_counts)=rownames
+
+# Reverse mapping pour obtenir les noms SRR
+reverse_mapping <- setNames(names(sample_mapping), sample_mapping)
+
+# Renommer les colonnes
+new_colnames <- reverse_mapping[colnames(paper_counts)]
+colnames(paper_counts) <- new_colnames
+paper_counts <- paper_counts[!apply(is.na(paper_counts), 1, any), ]
+
+# Créer le coldata avec conditions et replicates
+condition <- ifelse(grepl("SRR1037972[123]", new_colnames), "persister", "control")
+coldata <- data.frame(
+  row.names = new_colnames,
+  condition = factor(condition)
+)
+
+# Création DESeqDataSet
+dds_paper <- DESeqDataSetFromMatrix(
+  countData = paper_counts, 
+  colData = coldata,
+  design = ~ condition
+)
+
+# Transformation VST
+vst_paper <- vst(dds_paper, blind = FALSE)
+
+pdf("PCA_paper.pdf")
+plotPCA(vst_paper, intgroup="condition") +
+  labs(color = "Sample",
+       title = "PCA - Repro") +
+  geom_label(
+    aes(label = name),
+    size = 3,
+    label.padding = unit(0.15, "lines"),
+    alpha = 0.7,
+    nudge_y = 1.1
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_cartesian(clip = "off")             # labels en dehors visibles
+dev.off()
+# ====================
+
+
 # === Venn Diagram gènes DE entre le papier et la repro ===
 # Gènes DE
 de_paper <- unique(na.omit(df_compare$Name[df_compare$padj_paper < 0.05]))
@@ -173,7 +233,7 @@ res_paper$diffexp[res_paper$log2FoldChange < 0 & res_paper$padj<0.05] <- "Down"
 # Top 10 gènes les plus signifs
 top10 <- res_paper[order(res_paper$padj), ][1:10, ]
 
-pdf("volcano_allgenes.pdf")
+pdf("volcano_paper.pdf")
 # Plot
 volcano <- ggplot(res_paper, aes(x = log2FoldChange, y = minusLog10Padj)) +
   geom_point(aes(color = diffexp), alpha = 0.7, size = 1.5) +

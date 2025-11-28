@@ -131,8 +131,8 @@ process DESEQ {
 
     output:
     path 'deseq2_results.csv', emit: results
-    path 'MA_plot_allgenes.pdf', emit: ma_plot
-    path 'pca_vst_table.tsv', emit: pca
+    path 'MA_plot_allgenes.pdf'
+    path 'PCA_repro.pdf'
 
 
     script:
@@ -154,7 +154,6 @@ process DOWNSTREAM_ANALYSIS {
     file coldata_csv
     path mapping_file
     path paper_results
-    path pca_table
 
     output:
     path "*.pdf"
@@ -169,8 +168,7 @@ process DOWNSTREAM_ANALYSIS {
     3-create_downstream_plots.R \
         ${deseq_results} \
         gene_pathway_table.tsv \
-        ${mapping_file} \
-        ${pca_table}
+        ${mapping_file} 
 
     # 3) Comparaison papier
     4-paper_results_comp.R \
@@ -223,7 +221,6 @@ DOWNSTREAM_ANALYSIS(
     count_txt,
     file(params.config),
     file(params.mapping),
-    file(params.paper_table),
-    DESEQ.out.pca
+    file(params.paper_table)
 )
 }
