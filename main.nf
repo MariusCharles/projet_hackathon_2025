@@ -130,15 +130,17 @@ process DESEQ {
     file coldata_csv
 
     output:
-    file 'deseq2_results.csv'
-    file 'MA_plot_allgenes.pdf'
+    path 'deseq2_results.csv', emit: results
+    path 'MA_plot_allgenes.pdf', emit: ma_plot
+    path 'pca_vst_table.tsv', emit: pca
+
 
     script:
     """
     eval "\$(micromamba shell hook -s bash)"
     micromamba activate base
 
-    bin/2-deseq_table_suppplot.R ${counts_matrix} ${coldata_csv}
+    2-deseq_table_suppplot.R ${counts_matrix} ${coldata_csv}
     """
 }
 
@@ -152,6 +154,7 @@ process DOWNSTREAM_ANALYSIS {
     file coldata_csv
     path mapping_file
     path paper_results
+    path pca_table
 
     output:
     path "*.pdf"
@@ -160,16 +163,17 @@ process DOWNSTREAM_ANALYSIS {
     script:
     """
     # 1) Table KEGG
-    bin/1-create_gene-pathway_table.R .
+    1-create_gene-pathway_table.R .
 
     # 2) Plots downstream
-    bin/3-create_downstream_plots.R \
+    3-create_downstream_plots.R \
         ${deseq_results} \
         gene_pathway_table.tsv \
-        ${mapping_file}
+        ${mapping_file} \
+        ${pca_table}
 
     # 3) Comparaison papier
-    bin/4-paper_results_comp.R \
+    4-paper_results_comp.R \
         ${paper_results} \
         ${deseq_results} \
         ${counts_matrix} \
@@ -211,14 +215,15 @@ genome_gtf = DOWNLOAD_GTF()
 count_txt = FEATURECOUNTS(all_bams,genome_gtf)
 
 // On lit la matrice de comptes + coldata et on run Deseq + plot 
-deseq_results = DESEQ(count_txt, file(params.config))
+DESEQ(count_txt, file(params.config))
 
 // On fait l'analyse post-DESEQ (plots, comparaison avec les résultats du papier)
 DOWNSTREAM_ANALYSIS(
-    deseq_results[0],
+    DESEQ.out.results,
     count_txt,
     file(params.config),
     file(params.mapping),
-    file(params.paper_table)
+    file(params.paper_table),
+    DESEQ.out.pca
 )
 }

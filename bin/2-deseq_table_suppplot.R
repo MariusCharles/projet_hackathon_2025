@@ -71,3 +71,24 @@ write.csv(as.data.frame(res), file = "deseq2_results.csv", row.names = TRUE)
 pdf("MA_plot_allgenes.pdf")
 plotMA(res, ylim = c(-4,4), alpha = 0.05)
 dev.off()
+
+
+# === Génération de la table PCA ===
+vsd <- vst(dds, blind = FALSE)
+pca <- prcomp(t(assay(vsd)), scale. = TRUE)
+
+pca_df <- data.frame(
+  sample    = rownames(pca$x),
+  PC1       = pca$x[,1],
+  PC2       = pca$x[,2],
+  condition = coldata[rownames(pca$x), "condition"]
+)
+
+# ========== Save ==========
+write.table(
+  pca_df,
+  file = "pca_vst_table.tsv",
+  sep = "\t",
+  row.names = FALSE,
+  quote = FALSE
+)

@@ -7,6 +7,7 @@ args <- commandArgs(trailingOnly = TRUE)
 deseq_results_path  <- args[1]
 genes_pathways_path <- args[2]
 mapping_path        <- args[3]
+pca_table_path      <- args[4]
 
 # Lire résultats deseq
 res <- read.csv(deseq_results_path,row.names =1)
@@ -32,6 +33,15 @@ mapping <- read.table(
 
 # On ajoute 'pth' à la main car il n'est pas présent dans la table d'origine
 mapping[mapping$product == "peptidyl-tRNA hydrolase", ]$symbol="pth"
+
+# Lire la table PCA
+pca_df <- read.table(
+  pca_table_path,
+  header = TRUE,
+  sep = "\t",
+  stringsAsFactors = FALSE
+)
+
 
 # === Préparation du dataframe pour le plot : ===
 # Compute le log2base mean pour les abscisses (si diff de 0)
@@ -139,7 +149,20 @@ dev.off()
 #======================================
 
 
-
+# ===== PCA PLOT (bonus) =====
+pdf("PCA_plot_repro.pdf")
+ggplot(pca_df, aes(x = PC1, y = PC2, color = condition)) +
+  geom_point(size = 3) +
+  geom_text_repel(aes(label = sample), size = 3) +
+  theme_classic() +
+  labs(
+    title = "PCA - Repro results",
+    x = "PC1",
+    y = "PC2",
+    color = "Condition"
+  )
+dev.off()
+# ============================
 
 
 # ===== MA-PLOT TRANSLATION GENES =====
