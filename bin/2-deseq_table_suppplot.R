@@ -1,10 +1,10 @@
+#!/usr/bin/env Rscript
 library(DESeq2)
 
-# Adapter le début pour main.nf
-
-# Importer les données 
-counts_file  <- "/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/counts_matrix.txt"   # counts_matrix.txt
-coldata_file <-  "/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/data/config.csv"  # config.csv
+# Récupérer les arguments
+args <- commandArgs(trailingOnly = TRUE)
+counts_file  <- args[1]
+coldata_file <- args[2]
 
 # Lire counts matrix 
 cts <- read.table(
@@ -19,8 +19,7 @@ cts <- read.table(
 # Retirer les colonnes d'annot
 annot_cols <- c("Chr", "Start", "End", "Strand", "Length")
 cts <- cts[, !(colnames(cts) %in% annot_cols), drop = FALSE]
-
-# Clean noms de colonne : 
+# Clean noms de colonne 
 old_names <- colnames(cts)
 new_names <- gsub("_trimmed.sorted.bam$", "", old_names)
 colnames(cts) <- new_names
@@ -72,13 +71,3 @@ write.csv(as.data.frame(res), file = "deseq2_results.csv", row.names = TRUE)
 pdf("MA_plot_allgenes.pdf")
 plotMA(res, ylim = c(-4,4), alpha = 0.05)
 dev.off()
-
-
-
-
-
-
-
-
-
-

@@ -1,6 +1,11 @@
-library(KEGGREST) 
+#!/usr/bin/env Rscript
+library(KEGGREST)
 
-BASE_PATH = "/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/clean_KEGG"
+# Récupérer les arguments Nextflow
+args <- commandArgs(trailingOnly = TRUE)
+
+# Dossier de sortie (fourni en entrée)
+out_dir <- args[1]
 
 # On récupère les associations gènes - pathways 
 gene_pathway= keggLink(target = "brite", source = "sao") 
@@ -18,6 +23,6 @@ gene_pathway = aggregate(. ~ Gene_ID, data = gene_pathway,
                             FUN = function(x) paste(unique(x), collapse = ";"))
 
 # Save la table obtenue
-write.table(gene_pathway, file = file.path(BASE_PATH,"gene_pathway_table.tsv"),
+write.table(gene_pathway, file = file.path(out_dir,"gene_pathway_table.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 

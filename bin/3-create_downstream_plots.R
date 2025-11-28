@@ -1,12 +1,12 @@
+#!/usr/bin/env Rscript
 library(ggplot2)
 library(ggrepel)
 
-# Adapter le début pour main.nf
-
-# Importer les données 
-deseq_results_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/deseq2_results.csv"
-genes_pathways_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/clean_KEGG/gene_pathway_table.tsv"
-mapping_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/data/mapping_aureowiki.tsv"
+# ==== Arguments Nextflow ====
+args <- commandArgs(trailingOnly = TRUE)
+deseq_results_path  <- args[1]
+genes_pathways_path <- args[2]
+mapping_path        <- args[3]
 
 # Lire résultats deseq
 res <- read.csv(deseq_results_path,row.names =1)
@@ -84,8 +84,6 @@ typical_members = subset(
   symbol %in% c("pth", "infA", "infB", "infC", "frr", "tsf")
 )
 # ===========================
-
-
 
 
 

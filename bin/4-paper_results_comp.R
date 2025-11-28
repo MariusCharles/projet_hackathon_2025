@@ -1,12 +1,16 @@
-library(ggplot2) 
+#!/usr/bin/env Rscript
+library(ggplot2)
 library(VennDiagram)
 library(ggrepel)
+library(grid)
 
-# Importer les tables
-paper_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/deseq_table_paper.xls"
-deseq_results_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/deseq2_results.csv"
-counts_file  <- "/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/projet_hackathon_2025/results/counts_matrix.txt"   # counts_matrix.txt
-mapping_path<-"/Users/mafaldafrere/Documents/Cours/IODAA/HACKATHON/PROJET/clean_KEGG/mapping_aureowiki.tsv"
+# ==== Arguments Nextflow ====
+args <- commandArgs(trailingOnly = TRUE)
+paper_path         <- args[1]
+deseq_results_path <- args[2]
+counts_file        <- args[3]
+mapping_path       <- args[4]
+
 
 # Lire la table du papier (attention appel robuste sinon ne marche pas)
 res_paper <- read.delim(
@@ -112,6 +116,19 @@ write.table(compare_summary,
 # =========================
 
 
+# === Comparaison des valeurs numériques : ===
+df_compare <- merge(
+  res_paper[, c("Name", "baseMean", "log2FoldChange", "padj")],
+  res_combined[, c("Name", "baseMean", "log2FoldChange", "padj")],
+  by = "Name",
+  suffixes = c("_paper", "_repro")
+)
+
+cor_baseMean <- cor(df_compare$baseMean_paper, df_compare$baseMean_repro, use = "complete.obs")
+cor_log2FC   <- cor(df_compare$log2FoldChange_paper, df_compare$log2FoldChange_repro, use = "complete.obs")
+# ===========================================
+
+
 # === Venn Diagram gènes DE entre le papier et la repro ===
 # Gènes DE
 de_paper <- unique(na.omit(df_compare$Name[df_compare$padj_paper < 0.05]))
@@ -195,21 +212,6 @@ volcano <- ggplot(res_paper, aes(x = log2FoldChange, y = minusLog10Padj)) +
 print(volcano)
 dev.off()
 #======================================
-
-
-
-# === Comparaison des valeurs numériques : ===
-df_compare <- merge(
-  res_paper[, c("Name", "baseMean", "log2FoldChange", "padj")],
-  res_combined[, c("Name", "baseMean", "log2FoldChange", "padj")],
-  by = "Name",
-  suffixes = c("_paper", "_repro")
-)
-
-cor_baseMean <- cor(df_compare$baseMean_paper, df_compare$baseMean_repro, use = "complete.obs")
-cor_log2FC   <- cor(df_compare$log2FoldChange_paper, df_compare$log2FoldChange_repro, use = "complete.obs")
-# ===========================================
-
 
 
 # === Scatter plots ===
