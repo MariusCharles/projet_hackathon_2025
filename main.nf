@@ -17,7 +17,7 @@ process DOWNLOAD_FASTQ {
 
 process CUTADAPT {
 
-    cpus { Math.max(1, (params.core_nb / 4).toInteger()) }
+    cpus { Math.max(1, (params.core_nb / 6).toInteger()) }
 
     input:
     file fastq_file 
@@ -64,7 +64,7 @@ process BUILD_INDEX {
 
 process BOWTIE {
 
-    cpus { Math.max(1, (params.core_nb / 2).toInteger()) }
+    cpus { Math.max(1, (params.core_nb / 4).toInteger()) }
 
     input:
     path fastq_file
@@ -80,7 +80,7 @@ process BOWTIE {
     script:
     """
     set -e
-    bowtie -S genome_index ${fastq_file} | \
+    bowtie -p ${task.cpus} -S genome_index ${fastq_file} | \
     samtools view -bS - | \
     samtools sort -@ ${task.cpus} -o ${fastq_file.simpleName}.sorted.bam -
     samtools index ${fastq_file.simpleName}.sorted.bam
@@ -102,7 +102,7 @@ process DOWNLOAD_GTF {
 
 process FEATURECOUNTS {
     
-    cpus { Math.max(1, (params.core_nb / 2).toInteger()) }
+    cpus { Math.max(1, (params.core_nb / 4).toInteger()) }
 
     input:
     path bam_files
