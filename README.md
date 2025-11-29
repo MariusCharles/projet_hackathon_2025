@@ -43,6 +43,14 @@ Reproduire les figures principales de l’article à partir des données publiqu
 ### Fichiers nécessaires
 - **`main.nf`**, **`nextflow.config`**, **`data/`**, **`bin/`**
 
+### Rendre les scripts R exécutables
+
+Avant de lancer le pipeline, placez-vous à la **racine du projet** puis exécutez la commande suivante pour rendre tous les scripts `.R` exécutables :
+
+```bash
+chmod +x bin/*.R
+```
+
 ### Activer Nextflow dans la VM avec Conda 
 ```bash
 conda init
