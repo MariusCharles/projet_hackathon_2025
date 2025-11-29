@@ -8,12 +8,9 @@ L’objectif est de garantir la reproductibilité complète des résultats : mê
 
 ## En cours
 
-- [ ] Faire le diapo pour séance 14/11
-- [ ] Automatiser nb de cpu utilisé par chaque process (task.cpus...)
-- [ ] Construire base de données KEGG translation pour le plot annoté 
-- [ ] Gérer conversions noms de gènes
-- [ ] Nettoyer le dossier `to_delete/` après validation  
-- [ ] Commencer à écrire le rapport
+- [ ] Finir le rapport (ajouter résultats, commenter)
+- [ ] Commencer le diapo et présentation orale
+- [ ] Faire tourner le workflow pour plusieurs valeurs de q
 
 ---
 
@@ -26,8 +23,7 @@ L’objectif est de garantir la reproductibilité complète des résultats : mê
 | **`docker/`** | Contient un Dockerfile pour chaque outil utilisé (Bowtie, Cutadapt, FeatureCounts, DESeq2, etc.). Les images correspondantes sont disponibles sur DockerHub. |
 | **`data/`** | Données d’entrée :<br>• `config.csv` - table de description des échantillons (nom, URL FASTQ, réplicat, condition). |
 | **`bin/`** | Scripts exécutables du pipeline :<br>• `1-create_gene-pathway_table.R` : récupération et formatage des associations gènes–pathways KEGG<br>• `2-deseq_table_suppplot.R` : analyse différentielle avec DESeq2 + génération du MA-plot global<br>• `3-create_downstream_plots.R` : génération des volcano plots et MA-plots ciblés<br>• `4-paper_results_comp.R` : comparaison avec les résultats du papier (Venn diagrams, corrélations, scatter plots). |
-| **`results/`** | Résultats du dernier run du pipeline : matrice de comptages, résultats DESeq2, MA-plot. |
-| **`to_delete/`** | Dossier temporaire pour fichiers/données à valider avant suppression définitive. |
+| **`results/`** | Résultats du dernier run du pipeline (plots et tables). |
 
 ---
 
@@ -47,7 +43,16 @@ Reproduire les figures principales de l’article à partir des données publiqu
 ### Fichiers nécessaires
 - **`main.nf`**, **`nextflow.config`**, **`data/`**, **`bin/`**
 
+### Activer Nextflow dans la VM avec Conda 
+```bash
+conda init
+source ~/.bashrc
+conda activate nextflow
+```
+
+
 ### Lancer le pipeline
 
 ```bash
 nextflow run main.nf
+```
