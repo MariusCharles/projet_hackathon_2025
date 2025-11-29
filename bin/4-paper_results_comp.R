@@ -175,7 +175,7 @@ vst_paper <- vst(dds_paper, blind = FALSE)
 pdf("PCA_paper.pdf")
 plotPCA(vst_paper, intgroup="condition") +
   labs(color = "Sample",
-       title = "PCA - Repro") +
+       title = "PCA - Paper") +
   geom_label(
     aes(label = name),
     size = 3,
