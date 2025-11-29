@@ -40,15 +40,21 @@ Reproduire les figures principales de l’article à partir des données publiqu
 - **64 Go de RAM**  
 - **400 Go de stockage**
 
-### Fichiers nécessaires
-- **`main.nf`**, **`nextflow.config`**, **`data/`**, **`bin/`**
+### Installer Git sur la VM (si nécessaire)
 
-### Rendre les scripts R exécutables
-
-Avant de lancer le pipeline, placez-vous à la **racine du projet** puis exécutez la commande suivante pour rendre tous les scripts `.R` exécutables :
+Si Git n'est pas installé sur la VM, utiliser la commande suivante pour l’installer :
 
 ```bash
-chmod +x bin/*.R
+sudo apt update
+sudo apt install git -y
+```
+
+### Cloner le repository Git dans la VM
+Se placer dans le dossier souhaité de la VM pour cloner le dépôt depuis GitHub.  
+
+### Rentrer dans le dossier cloné
+```bash
+cd projet_hackathon_2025
 ```
 
 ### Activer Nextflow dans la VM avec Conda 
@@ -57,7 +63,6 @@ conda init
 source ~/.bashrc
 conda activate nextflow
 ```
-
 
 ### Lancer le pipeline
 
