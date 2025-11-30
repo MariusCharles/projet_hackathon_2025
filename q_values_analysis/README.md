@@ -97,18 +97,21 @@ sudo apt-get update
 sudo apt-get install wget
 ```
 
-### Lancer les scripts
+### Rendre les scripts exécutables
 
-Se placer dans le dossier `q_values_analysis/` contenant les scripts :
+Après avoir cloné le dépôt, Se placer dans le dossier `q_values_analysis/` contenant les scripts. Appliquer les permissions d’exécution à tous les scripts Python :
 
 ```bash
-python q_unique_values.py
+chmod +x *.py
 ```
 
-puis 
+### Lancer les scripts
+
+Toujours dans le dossier `q_values_analysis/` des les scripts :
 
 ```bash
-python q_values_stats.py
+./q_unique_values.py
+./q_values_stats.py
 ```
 
 Les FASTQ seront téléchargés automatiquement dans le dossier `fastq_files/` et les résultats imprimés à l’écran.
