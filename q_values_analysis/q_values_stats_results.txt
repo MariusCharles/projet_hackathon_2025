@@ -1,0 +1,6 @@
+SRR10379724: min=2, max=37, mean=35.62
+SRR10379726: min=2, max=37, mean=35.54
+SRR10379722: min=2, max=37, mean=35.60
+SRR10379721: min=2, max=37, mean=35.56
+SRR10379723: min=2, max=37, mean=35.61
+SRR10379725: min=2, max=37, mean=35.64

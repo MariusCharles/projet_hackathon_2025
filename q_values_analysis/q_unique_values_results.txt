@@ -1,0 +1,6 @@
+SRR10379724: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+SRR10379726: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+SRR10379722: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+SRR10379721: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+SRR10379723: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+SRR10379725: 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
