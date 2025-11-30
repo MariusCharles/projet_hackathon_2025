@@ -23,7 +23,7 @@ L’objectif est de garantir la reproductibilité complète des résultats : mê
 | **`docker/`** | Contient un Dockerfile pour chaque outil utilisé (Bowtie, Cutadapt, FeatureCounts, DESeq2, etc.). Les images correspondantes sont disponibles sur DockerHub. |
 | **`data/`** | Données d’entrée :<br>• `config.csv` - table de description des échantillons (nom, URL FASTQ, réplicat, condition). |
 | **`bin/`** | Scripts exécutables du pipeline :<br>• `1-create_gene-pathway_table.R` : récupération et formatage des associations gènes–pathways KEGG<br>• `2-deseq_table_suppplot.R` : analyse différentielle avec DESeq2 + génération du MA-plot global<br>• `3-create_downstream_plots.R` : génération des volcano plots et MA-plots ciblés<br>• `4-paper_results_comp.R` : comparaison avec les résultats du papier (Venn diagrams, corrélations, scatter plots). |
-| **`results/`** | Résultats du dernier run du pipeline (plots et tables) avec le paramètre q=20. |
+| **`results_all_q_values/`** | Résultats des runs du pipeline (plots et tables) pour les différentes valeurs de Q-score possibles. |
 
 ---
 
