@@ -15,6 +15,8 @@ Analyse des valeurs de qualité présentes dans des fichiers FASTQ téléchargé
 └── README.md                     # Ce fichier
 ```
 
+Le dossier `fastq_files/` nest pas présent par défaut dans le dossier `q_values_analysis` mais est créé une fois les scripts Python lancés.
+
 ## Données d’entrée : sample_url.csv
 
 Le fichier CSV contient deux colonnes : `sample` et `url`.  
