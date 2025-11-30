@@ -1,6 +1,6 @@
 # 🧬 Q-values Analysis
 
-Analyse des valeurs de qualité Phred présentes dans des fichiers FASTQ téléchargés depuis SRA afin de déterminer quelles valeurs de Q sont réellement utilisées dans le pipeline RNA-seq de l'article.
+Analyse des valeurs de qualité présentes dans des fichiers FASTQ téléchargés depuis SRA. Le but est de déterminer quelles valeurs de Q sont réellement utilisées dans le pipeline RNA-seq de l'article.
 
 ## Contenu du dépôt
 
@@ -22,7 +22,7 @@ Les scripts utilisent ces URL pour télécharger automatiquement les FASTQ.gz.
 
 ## Scripts disponibles
 
-### q_unique_values.py → Valeurs Q uniques
+### `q_unique_values.py` : Valeurs uniques des Q-scores
 
 Ce script :
 
@@ -38,11 +38,11 @@ Ce script :
 
 Tous les fichiers `.fastq` contiennent les mêmes valeurs uniques de Q : 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
 
-### q_values_stats.py → Statistiques globales (min / max / mean)
+### `q_values_stats.py` → Statistiques globales (min / max / mean)
 
 Ce script : 
 
-- télécharge les FASTQ.gz (via `wget`)
+- télécharge les `fastq.gz` (via `wget`)
 
 - parcourt uniquement les lignes de qualité (1 ligne sur 4)
 
@@ -50,34 +50,36 @@ Ce script :
 
 - calcule les statistiques des valeurs de Q par fichier d'entrée
 
-**Interprétation rapide**:
+**Interprétation**:
 
-- max = 37 → très haute qualité, proche du plafond Illumina.
+- max global = 37 → très haute qualité, proche du plafond Illumina.
 
-- min = 2 → très rare : probablement quelques bases très faibles.
+- min global = 2 → très rare : probablement quelques bases très faibles.
 
-- mean ≈ 35.6 → qualité globalement excellente.
+- mean globale ≈ 35.5 → qualité globalement excellente.
 
-### Valeurs de Q à intégrer au pipeline
+## Valeurs de Q-score à intégrer au pipeline
 
 ```
 [1, 3, 15, 23, 28, 34]
 ```
 
 Ces valeurs couvrent toutes les zones critiques de la distribution réelle des Q-scores observés dans les FASTQ.  
-Elles correspondent aux intervalles suivants :
+Chaque valeur unique testée est plus ou moins permissive. Ainsi :
 
-| Q testé | Correspondance avec les Q trouvés | Intérêt |
-|--------|-----------------------------------|---------|
-| **1**  | < min réel                        | Vérifie l’impact d’un trimming ultra permissif |
-| **3**  | proche du min réel (=2)           | Test raisonnable bas niveau |
-| **15** | entre 14 et 22                    | Cas médian, trimming modéré |
-| **23** | entre 22 et 27                    | Trimming plus strict |
-| **28** | entre 27 et 33                    | Très strict |
-| **34** | entre 33 et 37                    | Ultra strict (risque d’élaguage élevé) |
+| Q testé |  Intérêt |
+|--------|---------|
+| **1**  | Vérifie l’impact d’un trimming ultra permissif |
+| **3**  | Test raisonnable bas niveau |
+| **15** | Cas médian, trimming modéré |
+| **23** | Trimming plus strict |
+| **28** | Très strict |
+| **34** | Ultra strict (risque d’élaguage élevé) |
 
 
 ## 🔁 Reproductibilité totale
+
+Dans un souci de reproductibilité complète de cette analyse, il est recommander de créer un environnement `conda` dédié à l'exécution des scripts python.
 
 ### Création d'un environnement Conda
 
