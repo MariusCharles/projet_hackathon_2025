@@ -38,7 +38,11 @@ Ce script :
 
 **Résultats (q_unique_values_results.txt)**
 
-Tous les fichiers `.fastq` contiennent les mêmes valeurs uniques de Q : 6 valeurs Q uniques → [2, 14, 22, 27, 33, 37]
+Les fichiers FASTQ analysés présentent tous exactement les mêmes six valeurs uniques de Q-score : [2, 14, 22, 27, 33, 37]. Comme Bowtie applique le paramètre -q en supprimant toutes les bases dont le Q-score est strictement inférieur au seuil, il est pertinent de tester des seuils situés juste au-dessus de chacune de ces valeurs.
+
+Chaque seuil correspondra à la valeur unique suivante et permettra de cibler précisément les vraies ruptures de qualité présentes dans les données.
+
+Ainsi, les seuils utilisés dans l’analyse sont : [1, 3, 15, 23, 28, 34].
 
 ### `q_values_stats.py` → Statistiques globales (min / max / mean)
 
