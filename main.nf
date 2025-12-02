@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 
 process DOWNLOAD_FASTQ {
+
+    cpus { Math.max(1, (params.core_nb / 6).toInteger()) }
+
     input:
     val url
 
