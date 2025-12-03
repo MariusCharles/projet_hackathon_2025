@@ -172,7 +172,7 @@ dds_paper <- DESeqDataSetFromMatrix(
 # Transformation VST
 vst_paper <- vst(dds_paper, blind = FALSE)
 
-pdf("PCA_paper.pdf")
+pdf("PCA_paper.pdf",height=6,width=7)
 plotPCA(vst_paper, intgroup="condition") +
   labs(color = "Sample",
        title = "PCA - Paper") +
