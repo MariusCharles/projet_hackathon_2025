@@ -301,7 +301,7 @@ volcano <- ggplot(res_paper, aes(x = log2FoldChange, y = minusLog10Padj)) +
   geom_text_repel(
     data = top10,
     aes(label = symbol),
-    size = 2.2,
+    size = 3,
     segment.color = "black",
     segment.size = 0.8,
     min.segment.length = 0,

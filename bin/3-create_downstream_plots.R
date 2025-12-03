@@ -212,26 +212,27 @@ p <- ggplot(
   )
 
 
-# === Gestion de la légende ===
-
+# Légende en haut (plus lisible)
 p <- p + theme(
   legend.box = "horizontal"
 )
 
-# Ordre des légendes
 p <- p + guides(
   color = guide_legend(order = 1),
   shape = guide_legend(order = 2)
 )
 
-# Légende en haut (plus lisible)
+
 p <- p + theme(
-  legend.position = "top",
+  legend.position = c(0.40, 0.93),
   legend.background = element_blank(),
   legend.box.background = element_blank(),
-  legend.key = element_blank(),
-  legend.text = element_text(size = 10),
-  legend.title = element_text(size = 10)
+  legend.key = element_blank()
+)
+
+p <- p + theme(
+  legend.text = element_text(size = 10),  
+  legend.title = element_text(size = 10)  
 )
 
 print(p)
