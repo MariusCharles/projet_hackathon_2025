@@ -50,9 +50,11 @@ sudo apt install git -y
 ```
 
 ### Cloner le repository Git dans la VM
-Se placer dans le dossier souhaité de la VM pour cloner le dépôt depuis GitHub.  
+```bash
+git clone https://github.com/MariusCharles/projet_hackathon_2025.git
+```
 
-### Rentrer dans le dossier cloné
+### Rentrer dans le dossier du projet
 ```bash
 cd projet_hackathon_2025
 ```
