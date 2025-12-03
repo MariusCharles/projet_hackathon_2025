@@ -194,7 +194,7 @@ dev.off()
 de_paper <- unique(na.omit(df_compare$Name[df_compare$padj_paper < 0.05]))
 de_repro <- unique(na.omit(df_compare$Name[df_compare$padj_repro < 0.05]))
 
-pdf("venn_DEgenes_paper_repro.pdf")
+pdf("venn_DEgenes_paper_repro.pdf",width=6,height=6)
 grid.newpage()
 pushViewport(viewport(width = unit(10, "cm"), height = unit(10, "cm")))
 draw.pairwise.venn(
@@ -267,7 +267,6 @@ ggplot(df_de, aes(x = log2FoldChange_paper, y = log2FoldChange_repro)) +
   )) +
   labs(
     title = "Quadrant scatter (DE-only)",
-    subtitle = paste0("n = ", nrow(df_de), " DE genes"),
     x = "log2FC (paper)",
     y = "log2FC (repro)",
     color = "Category"
@@ -289,7 +288,7 @@ res_paper$diffexp[res_paper$log2FoldChange < 0 & res_paper$padj<0.05] <- "Down"
 # Top 10 gènes les plus signifs
 top10 <- res_paper[order(res_paper$padj), ][1:10, ]
 
-pdf("volcano_paper.pdf")
+pdf("volcano_paper.pdf",width=8,height=7)
 # Plot
 volcano <- ggplot(res_paper, aes(x = log2FoldChange, y = minusLog10Padj)) +
   geom_point(aes(color = diffexp), alpha = 0.7, size = 1.5) +
@@ -331,7 +330,7 @@ dev.off()
 
 
 # === Scatter plots ===
-pdf("scatterplot_log2FC_paper_repro.pdf")
+pdf("scatterplot_log2FC_paper_repro.pdf",width=8,height=7)
 ggplot(df_compare, aes(x = log2FoldChange_paper, y = log2FoldChange_repro)) +
   geom_point(alpha = 0.4) +
   geom_abline(slope = 1, intercept = 0, color = "red") +
@@ -340,7 +339,7 @@ ggplot(df_compare, aes(x = log2FoldChange_paper, y = log2FoldChange_repro)) +
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
-pdf("scatterplot_basemean_paper_repro.pdf")
+pdf("scatterplot_basemean_paper_repro.pdf",width=8,height=7)
 ggplot(df_compare, aes(x = baseMean_paper, y = baseMean_repro)) +
   geom_point(alpha = 0.4) +
   scale_x_log10() +

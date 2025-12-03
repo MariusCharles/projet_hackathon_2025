@@ -100,7 +100,7 @@ res_annot$diffexp[res_annot$log2FoldChange < 0 & res_annot$is_sig] <- "Down"
 # Top 10 gènes les plus signifs
 top10 <- res_annot[order(res_annot$padj), ][1:10, ]
 
-pdf("volcano_repro.pdf")
+pdf("volcano_repro.pdf",width=8,height=7)
 # Plot
 volcano <- ggplot(res_annot, aes(x = log2FoldChange, y = minusLog10Padj)) +
   geom_point(aes(color = diffexp), alpha = 0.7, size = 1.5) +
@@ -139,27 +139,29 @@ print(volcano)
 dev.off()
 #======================================
 
+
+
 # ===== MA-PLOT TRANSLATION GENES =====
 plot_df=res_annot[translation_genes, ]
 
-pdf("MA_plot_translationgenes.pdf")
+pdf("MA_plot_translationgenes.pdf", width = 5, height = 5)
 p <- ggplot(
   data = plot_df,
   aes(x = log2BaseMean, y = log2FoldChange, color = signif)
 ) +
   
   # Tous les gènes de traduction (gris / rouge)
-  geom_point(alpha = 0.8, size = 1.2) +
+  geom_point(alpha = 0.9, size = 1.6) +
   
   # Cercle noir autour des AA-tRNA synthetases (restreint aux translation_genes)
   geom_point(
     data = subset(plot_df, is_AA_tRNA),
     aes(shape = "AA_tRNA_synthetases"),
-    color = "black", size = 1.3, stroke = 1.3
+    color = "black", size = 1.6, stroke = 1.3
   ) +
   
   # Couleurs gris / rouge
-  scale_color_manual(values = c("Non-Significant" = "grey70",
+  scale_color_manual(values = c("Non-Significant" = "grey60",
                                 "Significant" = "red")) +
   
   # Cercle vide pour les AA-tRNA
@@ -175,22 +177,22 @@ p <- ggplot(
     limits = c(-6, 5),
     breaks = seq(-6, 5, by = 1),
     expand = c(0, 0)
-  )+
+  ) +
   
   # Labels des gènes typiques
   geom_text_repel(
     data = typical_members,
     aes(x = log2BaseMean, y = log2FoldChange, label = symbol),
-    inherit.aes = FALSE,       
+    inherit.aes = FALSE,
     fontface = "italic",
-    size = 4,
+    size = 5,
     segment.color = "black",
-    segment.size = 1,
+    segment.size = 1.2,
     min.segment.length = 0,
     box.padding = 1.6,
     point.padding = 0
-  )+
-
+  ) +
+  
   # Ligne horizontale
   geom_hline(yintercept = 0, linetype = "dashed") +
   
@@ -204,27 +206,34 @@ p <- ggplot(
   
   theme_classic() +
   theme(
-  panel.background = element_rect(fill = NA, color = NA),
-  panel.border = element_rect(fill = NA, color = "black", size = 1)
-) 
+    # background supprimé
+    panel.background = element_rect(fill = NA, color = NA),
+    panel.border     = element_rect(fill = NA, color = "black", size = 1)
+  )
 
 
-# Gestion de la légende
+# === Gestion de la légende ===
+
 p <- p + theme(
   legend.box = "horizontal"
 )
 
+# Ordre des légendes
 p <- p + guides(
   color = guide_legend(order = 1),
   shape = guide_legend(order = 2)
 )
 
+# Légende en haut (plus lisible)
 p <- p + theme(
-  legend.position = c(0.32, 0.08),
+  legend.position = "top",
   legend.background = element_blank(),
   legend.box.background = element_blank(),
-  legend.key = element_blank()
+  legend.key = element_blank(),
+  legend.text = element_text(size = 10),
+  legend.title = element_text(size = 10)
 )
+
 print(p)
 dev.off()
 #======================================

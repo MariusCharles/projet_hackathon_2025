@@ -69,7 +69,7 @@ res <- results(dds)
 write.csv(as.data.frame(res), file = "deseq2_results.csv", row.names = TRUE)
 
 # Plot supplementary figure
-pdf("MA_plot_allgenes.pdf")
+pdf("MA_plot_allgenes.pdf",width=7,height=6)
 plotMA(res, ylim = c(-4,4), alpha = 0.05)
 dev.off()
 
@@ -77,7 +77,7 @@ dev.off()
 # === Génération du plot PCA ===
 transformed_counts = vst(dds, blind = FALSE)
 
-pdf("PCA_repro.pdf")
+pdf("PCA_repro.pdf",height=6,width=7)
 plotPCA(transformed_counts, intgroup="condition") +
   labs(color = "Sample",
        title = "PCA - Repro") +
