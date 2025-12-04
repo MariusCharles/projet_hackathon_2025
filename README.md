@@ -4,15 +4,7 @@ Ce projet reproduit le pipeline **RNA-seq** de l’article *“Intracellular Sta
 
 L’objectif est de garantir la reproductibilité complète des résultats : mêmes versions de packages, mêmes outils.
 
----
 
-## En cours
-
-- [ ] Finir le rapport (ajouter résultats, commenter)
-- [ ] Commencer le diapo et présentation orale
-- [ ] Faire tourner le workflow pour plusieurs valeurs de q
-
----
 
 ## Structure du dépôt
 
